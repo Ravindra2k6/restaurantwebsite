@@ -24,8 +24,17 @@ app.use(
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        imgSrc: ["'self'", "data:", "https://res.cloudinary.com", "https://images.unsplash.com"],
-        connectSrc: ["'self'", process.env.CLIENT_URL, process.env.ADMIN_URL].filter(Boolean),
+        imgSrc: [
+          "'self'",
+          "data:",
+          "https://res.cloudinary.com",
+          "https://images.unsplash.com",
+        ],
+        connectSrc: [
+          "'self'",
+          ...(process.env.CLIENT_URL || "").split(",").map((v) => v.trim()),
+          ...(process.env.ADMIN_URL || "").split(",").map((v) => v.trim()),
+        ].filter(Boolean),
         scriptSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'"],
         objectSrc: ["'none'"],
@@ -33,7 +42,7 @@ app.use(
       },
     },
     crossOriginEmbedderPolicy: false, // would otherwise block third-party Cloudinary/Google Maps embeds
-  })
+  }),
 );
 
 // ---- CORS ----
@@ -45,11 +54,12 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+      if (!origin || allowedOrigins.includes(origin))
+        return callback(null, true);
       callback(new Error(`CORS blocked for origin: ${origin}`));
     },
     credentials: true, // allow cookies (accessToken/refreshToken) to be sent
-  })
+  }),
 );
 
 // ---- Body & cookie parsing ----
