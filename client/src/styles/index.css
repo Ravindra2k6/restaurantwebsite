@@ -1,0 +1,77 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-cream text-charcoal-900 font-body antialiased;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  @apply font-display;
+}
+
+/* Custom scrollbar — subtle, matches the gold/charcoal palette */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-charcoal-100;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-primary-400 rounded-full;
+}
+
+/* Visible focus ring for keyboard navigation (accessibility) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  @apply outline-none ring-2 ring-primary-500 ring-offset-2 ring-offset-cream;
+}
+
+/* Skip-to-content link — hidden until focused, for screen reader / keyboard users */
+.skip-link {
+  @apply sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:bg-charcoal-900 focus:text-cream focus:px-4 focus:py-2 focus:rounded-md;
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-glass;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gold-gradient px-6 py-3 font-semibold text-charcoal-900 shadow-gold transition-transform duration-300 hover:scale-105 active:scale-95;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary-500 px-6 py-3 font-semibold text-primary-600 transition-colors duration-300 hover:bg-primary-500 hover:text-white;
+  }
+
+  .btn-ghost-light {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border-2 border-white/70 px-6 py-3 font-semibold text-white backdrop-blur-sm transition-colors duration-300 hover:bg-white hover:text-charcoal-900;
+  }
+
+  .section-heading {
+    @apply text-3xl md:text-4xl lg:text-5xl font-display font-bold text-charcoal-900;
+  }
+
+  .section-subheading {
+    @apply mt-3 text-charcoal-500 max-w-2xl mx-auto text-base md:text-lg;
+  }
+
+  .card-premium {
+    @apply rounded-2xl bg-white shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-charcoal-100;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-semibold;
+  }
+}
