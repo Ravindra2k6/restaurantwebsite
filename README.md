@@ -49,4 +49,4 @@ npm run dev
 
 ## License & Ownership
 
-This project was developed for Bojanam's & Biryani. All rights reserved..
+This project was developed for Bojanams & Biryani. All rights reserved..
