@@ -6,6 +6,7 @@ A full-stack MERN restaurant website with an admin panel.
 ## Project Structure
 
 restaurantwebsite/
+|
 ├── client/   # Customer website
 ├── admin/    # Admin dashboard
 ├── server/   # Backend API
