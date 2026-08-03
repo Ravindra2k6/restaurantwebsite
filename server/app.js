@@ -54,11 +54,17 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin))
+      if (
+        !origin ||
+        allowedOrigins.includes(origin) ||
+        origin.endsWith(".vercel.app")
+      ) {
         return callback(null, true);
+      }
+
       callback(new Error(`CORS blocked for origin: ${origin}`));
     },
-    credentials: true, // allow cookies (accessToken/refreshToken) to be sent
+    credentials: true,
   }),
 );
 
