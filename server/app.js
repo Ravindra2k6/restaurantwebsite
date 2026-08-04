@@ -46,32 +46,43 @@ app.use(
 );
 
 // ---- CORS ----
+// ---- CORS ----
 const allowedOrigins = [
-  ...(process.env.CLIENT_URL || "http://localhost:5173").split(","),
-  ...(process.env.ADMIN_URL || "http://localhost:5174").split(","),
-].map((origin) => origin.trim());
+  "http://localhost:5173",
+  "http://localhost:5174",
+
+  "https://bojanamsbiryani.com",
+  "https://www.bojanamsbiryani.com",
+
+  "https://admin.bojanamsbiryani.com",
+];
+
+if (process.env.CLIENT_URL) {
+  allowedOrigins.push(
+    ...process.env.CLIENT_URL.split(",").map((o) => o.trim()),
+  );
+}
+
+if (process.env.ADMIN_URL) {
+  allowedOrigins.push(...process.env.ADMIN_URL.split(",").map((o) => o.trim()));
+}
 
 app.use(
   cors({
-    origin: (origin, callback) => {
+    origin(origin, callback) {
       if (
         !origin ||
         allowedOrigins.includes(origin) ||
-        origin.endsWith(".vercel.app")
+        (origin && origin.endsWith(".vercel.app"))
       ) {
         return callback(null, true);
       }
 
-      callback(new Error(`CORS blocked for origin: ${origin}`));
+      return callback(new Error(`CORS blocked: ${origin}`));
     },
     credentials: true,
   }),
 );
-
-// ---- Body & cookie parsing ----
-app.use(express.json({ limit: "10kb" }));
-app.use(express.urlencoded({ extended: true, limit: "10kb" }));
-app.use(cookieParser());
 
 // ---- Sanitize against NoSQL injection ($ and . operator injection) ----
 app.use(mongoSanitize());
