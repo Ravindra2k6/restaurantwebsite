@@ -14,6 +14,10 @@ const apiRoutes = require("./routes/index");
 
 const app = express();
 
+// Parse JSON request body
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // ---- Trust proxy (needed for correct req.ip behind Nginx/Heroku/Render/etc.) ----
 app.set("trust proxy", 1);
 
