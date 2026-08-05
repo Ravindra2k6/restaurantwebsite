@@ -11,7 +11,7 @@
  * Registered from src/main.jsx. Bump CACHE_VERSION whenever deployed static
  * assets change meaningfully, so old caches are cleared on next visit.
  */
-const CACHE_VERSION = "v1";
+const CACHE_VERSION = "v2";
 const APP_SHELL_CACHE = `app-shell-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `runtime-${CACHE_VERSION}`;
 
@@ -19,20 +19,22 @@ const APP_SHELL_URLS = ["/", "/manifest.json", "/favicon.svg"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(APP_SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL_URLS))
+    caches.open(APP_SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL_URLS)),
   );
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => ![APP_SHELL_CACHE, RUNTIME_CACHE].includes(key))
-          .map((key) => caches.delete(key))
-      )
-    )
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(
+          keys
+            .filter((key) => ![APP_SHELL_CACHE, RUNTIME_CACHE].includes(key))
+            .map((key) => caches.delete(key)),
+        ),
+      ),
   );
   self.clients.claim();
 });
@@ -43,17 +45,9 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // Network-first for API calls
+  // Always fetch fresh API data
   if (url.pathname.startsWith("/api/")) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request))
-    );
+    event.respondWith(fetch(request));
     return;
   }
 
@@ -65,10 +59,12 @@ self.addEventListener("fetch", (event) => {
           cached ||
           fetch(request).then((response) => {
             const clone = response.clone();
-            caches.open(APP_SHELL_CACHE).then((cache) => cache.put(request, clone));
+            caches
+              .open(APP_SHELL_CACHE)
+              .then((cache) => cache.put(request, clone));
             return response;
-          })
-      )
+          }),
+      ),
     );
     return;
   }
@@ -84,6 +80,6 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(() => cached);
       return cached || networkFetch;
-    })
+    }),
   );
 });
