@@ -1,6 +1,4 @@
 User-agent: *
 Allow: /
-Disallow: /privacy
-Disallow: /terms
 
-Sitemap: /sitemap.xml
+Sitemap: https://www.bojanamsbiryani.com/sitemap.xml
