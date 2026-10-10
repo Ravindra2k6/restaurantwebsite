@@ -24,7 +24,9 @@ import { formatMenuPrice } from "../../utils/formatters";
 
 const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
   const [images, setImages] = useState([]);
-  const [pricingMode, setPricingMode] = useState(item?.variants?.length ? "variants" : "flat");
+  const [pricingMode, setPricingMode] = useState(
+    item?.variants?.length ? "variants" : "flat",
+  );
 
   const {
     register,
@@ -38,7 +40,9 @@ const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
       category: item?.category?._id || item?.category || "",
       foodType: item?.foodType || "veg",
       price: item?.price || "",
-      variants: item?.variants?.length ? item.variants : [{ label: "Half", price: "" }],
+      variants: item?.variants?.length
+        ? item.variants
+        : [{ label: "Half", price: "" }],
       isAvailable: item?.isAvailable ?? true,
       isPopular: item?.isPopular ?? false,
       isChefRecommended: item?.isChefRecommended ?? false,
@@ -46,7 +50,10 @@ const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
     },
   });
 
-  const { fields, append, remove } = useFieldArray({ control, name: "variants" });
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "variants",
+  });
 
   const onSubmit = async (values) => {
     try {
@@ -61,12 +68,31 @@ const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
       formData.append("isTodaysSpecial", values.isTodaysSpecial);
 
       if (pricingMode === "flat") {
-        formData.append("price", values.price);
+        const price = Number(values.price);
+
+        if (values.price === "" || !Number.isFinite(price) || price < 0) {
+          toast.error("Please enter a valid flat price.");
+          return;
+        }
+
+        formData.append("price", String(price));
       } else {
-        formData.append(
-          "variants",
-          JSON.stringify(values.variants.filter((v) => v.label && v.price))
-        );
+        const variants = (values.variants || [])
+          .filter((v) => v.label?.trim() && v.price !== "")
+          .map((v) => ({
+            label: v.label.trim(),
+            price: Number(v.price),
+          }));
+
+        if (
+          variants.length === 0 ||
+          variants.some((v) => !Number.isFinite(v.price) || v.price < 0)
+        ) {
+          toast.error("Enter a valid label and price for each variant.");
+          return;
+        }
+
+        formData.append("variants", JSON.stringify(variants));
       }
 
       images.forEach((file) => formData.append("images", file));
@@ -97,10 +123,16 @@ const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
         <Select
           label="Category"
           error={errors.category}
-          options={categories?.map((c) => ({ value: c._id, label: c.name })) || []}
+          options={
+            categories?.map((c) => ({ value: c._id, label: c.name })) || []
+          }
           {...register("category", { required: "Category is required" })}
         />
-        <Select label="Food Type" options={FOOD_TYPES} {...register("foodType", { required: true })} />
+        <Select
+          label="Food Type"
+          options={FOOD_TYPES}
+          {...register("foodType", { required: true })}
+        />
       </div>
 
       <div>
@@ -110,7 +142,9 @@ const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
             type="button"
             onClick={() => setPricingMode("flat")}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-              pricingMode === "flat" ? "bg-primary-500 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800"
+              pricingMode === "flat"
+                ? "bg-primary-500 text-white"
+                : "bg-slate-100 text-slate-600 dark:bg-slate-800"
             }`}
           >
             Flat Price
@@ -119,7 +153,9 @@ const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
             type="button"
             onClick={() => setPricingMode("variants")}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold ${
-              pricingMode === "variants" ? "bg-primary-500 text-white" : "bg-slate-100 text-slate-600 dark:bg-slate-800"
+              pricingMode === "variants"
+                ? "bg-primary-500 text-white"
+                : "bg-slate-100 text-slate-600 dark:bg-slate-800"
             }`}
           >
             Half / Full Variants
@@ -127,7 +163,12 @@ const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
         </div>
 
         {pricingMode === "flat" ? (
-          <TextInput type="number" step="0.01" placeholder="e.g. 250" {...register("price")} />
+          <TextInput
+            type="number"
+            step="0.01"
+            placeholder="e.g. 250"
+            {...register("price")}
+          />
         ) : (
           <div className="space-y-2">
             {fields.map((field, index) => (
@@ -144,7 +185,12 @@ const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
                   placeholder="Price"
                   {...register(`variants.${index}.price`)}
                 />
-                <IconButton icon={FiX} label="Remove variant" variant="danger" onClick={() => remove(index)} />
+                <IconButton
+                  icon={FiX}
+                  label="Remove variant"
+                  variant="danger"
+                  onClick={() => remove(index)}
+                />
               </div>
             ))}
             <button
@@ -169,8 +215,14 @@ const MenuItemForm = ({ item, categories, onSaved, onCancel }) => {
       <div className="grid grid-cols-2 gap-3 rounded-xl bg-slate-50 p-4 dark:bg-slate-900">
         <ToggleSwitch label="Available" {...register("isAvailable")} />
         <ToggleSwitch label="Popular" {...register("isPopular")} />
-        <ToggleSwitch label="Chef Recommended" {...register("isChefRecommended")} />
-        <ToggleSwitch label="Today's Special" {...register("isTodaysSpecial")} />
+        <ToggleSwitch
+          label="Chef Recommended"
+          {...register("isChefRecommended")}
+        />
+        <ToggleSwitch
+          label="Today's Special"
+          {...register("isTodaysSpecial")}
+        />
       </div>
 
       <div className="flex justify-end gap-3 border-t border-slate-100 pt-4 dark:border-slate-800">
@@ -197,8 +249,17 @@ const MenuManagement = () => {
 
   const debouncedSearch = useDebounce(search);
 
-  const { data: categories } = useFetch(() => categoryService.getAll({ limit: 100 }), []);
-  const { data: items, meta, loading, error, refetch } = useFetch(
+  const { data: categories } = useFetch(
+    () => categoryService.getAll({ limit: 100 }),
+    [],
+  );
+  const {
+    data: items,
+    meta,
+    loading,
+    error,
+    refetch,
+  } = useFetch(
     () =>
       menuService.getAll({
         search: debouncedSearch || undefined,
@@ -207,7 +268,7 @@ const MenuManagement = () => {
         page,
         limit: 10,
       }),
-    [debouncedSearch, categoryFilter, foodTypeFilter, page]
+    [debouncedSearch, categoryFilter, foodTypeFilter, page],
   );
 
   const openCreate = () => {
@@ -240,7 +301,9 @@ const MenuManagement = () => {
   const handleToggleAvailability = async (item) => {
     try {
       await menuService.toggleAvailability(item._id, !item.isAvailable);
-      toast.success(`Marked as ${!item.isAvailable ? "available" : "unavailable"}`);
+      toast.success(
+        `Marked as ${!item.isAvailable ? "available" : "unavailable"}`,
+      );
       refetch();
     } catch (err) {
       toast.error(err.message);
@@ -254,30 +317,48 @@ const MenuManagement = () => {
       render: (row) => (
         <div className="flex items-center gap-3">
           {row.images?.[0]?.url ? (
-            <img src={row.images[0].url} alt="" className="h-10 w-10 rounded-lg object-cover" />
+            <img
+              src={row.images[0].url}
+              alt=""
+              className="h-10 w-10 rounded-lg object-cover"
+            />
           ) : (
             <div className="h-10 w-10 rounded-lg bg-slate-100 dark:bg-slate-800" />
           )}
           <div>
-            <p className="font-semibold text-slate-800 dark:text-slate-100">{row.name}</p>
+            <p className="font-semibold text-slate-800 dark:text-slate-100">
+              {row.name}
+            </p>
             <p className="text-xs text-slate-400">{row.category?.name}</p>
           </div>
         </div>
       ),
     },
-    { key: "foodType", label: "Type", render: (row) => <span className="capitalize">{row.foodType}</span> },
+    {
+      key: "foodType",
+      label: "Type",
+      render: (row) => <span className="capitalize">{row.foodType}</span>,
+    },
     { key: "price", label: "Price", render: (row) => formatMenuPrice(row) },
     {
       key: "badges",
       label: "Badges",
       render: (row) => (
         <div className="flex flex-wrap gap-1">
-          {row.isPopular && <span className="badge bg-primary-50 text-primary-700 dark:bg-primary-500/10">Popular</span>}
+          {row.isPopular && (
+            <span className="badge bg-primary-50 text-primary-700 dark:bg-primary-500/10">
+              Popular
+            </span>
+          )}
           {row.isChefRecommended && (
-            <span className="badge bg-purple-50 text-purple-700 dark:bg-purple-500/10">Chef Special</span>
+            <span className="badge bg-purple-50 text-purple-700 dark:bg-purple-500/10">
+              Chef Special
+            </span>
           )}
           {row.isTodaysSpecial && (
-            <span className="badge bg-amber-50 text-amber-700 dark:bg-amber-500/10">Today</span>
+            <span className="badge bg-amber-50 text-amber-700 dark:bg-amber-500/10">
+              Today
+            </span>
           )}
         </div>
       ),
@@ -286,7 +367,10 @@ const MenuManagement = () => {
       key: "isAvailable",
       label: "Available",
       render: (row) => (
-        <ToggleSwitch checked={row.isAvailable} onChange={() => handleToggleAvailability(row)} />
+        <ToggleSwitch
+          checked={row.isAvailable}
+          onChange={() => handleToggleAvailability(row)}
+        />
       ),
     },
     {
@@ -295,8 +379,17 @@ const MenuManagement = () => {
       className: "text-right",
       render: (row) => (
         <div className="flex justify-end gap-1">
-          <IconButton icon={FiEdit2} label="Edit" onClick={() => openEdit(row)} />
-          <IconButton icon={FiTrash2} label="Delete" variant="danger" onClick={() => setDeleteTarget(row)} />
+          <IconButton
+            icon={FiEdit2}
+            label="Edit"
+            onClick={() => openEdit(row)}
+          />
+          <IconButton
+            icon={FiTrash2}
+            label="Delete"
+            variant="danger"
+            onClick={() => setDeleteTarget(row)}
+          />
         </div>
       ),
     },
@@ -306,12 +399,19 @@ const MenuManagement = () => {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-3">
-          <SearchBar value={search} onChange={setSearch} placeholder="Search dishes..." className="w-64" />
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder="Search dishes..."
+            className="w-64"
+          />
           <FilterBar>
             <FilterSelect
               value={categoryFilter}
               onChange={setCategoryFilter}
-              options={categories?.map((c) => ({ value: c._id, label: c.name })) || []}
+              options={
+                categories?.map((c) => ({ value: c._id, label: c.name })) || []
+              }
               placeholder="All Categories"
             />
             <FilterSelect
